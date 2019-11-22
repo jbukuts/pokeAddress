@@ -22,6 +22,7 @@ using namespace std;
 // get the page size and the address space ranged
 unsigned long TASK_SIZE = 0, PAGE_SIZE = 0;
 
+// args for the threads
 struct args_struct {
 	int id;
 	vector<int> flags;
@@ -30,16 +31,16 @@ struct args_struct {
 
 int main(int argc, char* argv[])
 {
+	// set page size and task size
 	PAGE_SIZE = sysconf(_SC_PAGESIZE);
 	if(sizeof (void*) == sizeof (int)) // 32-bit system
 		TASK_SIZE = 0xc0000000UL;
 	else // 64-bit system
 		TASK_SIZE = (1UL << 47) - PAGE_SIZE;
 	
-	
+	// see the values
 	printf("TASK SIZE IS %lu\n",TASK_SIZE);
 	printf("PAGE SIZE IS %lu\n",PAGE_SIZE);
-
 	printf("NEED TO POKE %lu ADDRESSES\n",(TASK_SIZE/PAGE_SIZE));
 
 
@@ -57,7 +58,6 @@ int main(int argc, char* argv[])
 		printf("Please specift either [base] or [all]\n");
 
 	return 0; 
-
 }
 
 // wrapper for syscall
@@ -65,6 +65,7 @@ short poke_addr(void* v) {
 	return (short)syscall(437,v);
 }
 
+// simple method to print the addr in hex format
 void long_to_hex(unsigned long addr) {
 	printf("0x%lx\n",addr);
 }
@@ -82,6 +83,7 @@ void print_flags(short flags) {
 		return;
 	}
 
+	// cast short
 	uint8_t f = (uint8_t)flags;
 
 	// check and update flags
@@ -92,7 +94,7 @@ void print_flags(short flags) {
 	if ((f & VM_EXEC) > 0)
 		exec = 'X';
 
-	// print the values
+	// print the values of the flags
 	printf("READ:\t%c\nWRITE:\t%c\nEXEC:\t%c\n",read,write,exec);
 }
 
@@ -105,13 +107,14 @@ void base_poke() {
 	char * buffer;
 	buffer = (char *)malloc (8);
 	void* main_point = (void*&)main;
-
+	
+	// get the flags for the variables
 	short local_flags = poke_addr(&local_variable);
 	short global_flags = poke_addr(&global_variable);
 	short main_flags = poke_addr(&main_point);
 	short buffer_flags = poke_addr(&buffer);
 
-
+	// print all the flags
 	printf("Testing local variable at address");
 	printf(" (flags 0x%lx) ",local_flags);
 	long_to_hex((unsigned long)&local_variable);
@@ -164,10 +167,11 @@ void entire_poke() {
 	pthread_t threads[NUM_THREADS];
 	struct args_struct thread_args[NUM_THREADS];
 	for (int i=0;i<NUM_THREADS;++i) {
-		thread_args[i].id = i;
-		
+		// set id and start thread
+		thread_args[i].id = i;		
 		rc = pthread_create(&threads[i],NULL,&thread,(void *)&thread_args[i]);
 
+		// check if thread stared properly
 		if (rc) {
 			printf("FAILED TO START THREAD!");
 			exit(-1);
@@ -189,27 +193,30 @@ void entire_poke() {
 	}
 }
 
-
+// what each thread will run
 void *thread(void *args) {
-
+	// get the page and task size
 	unsigned long PAGE_SIZE = 0, TASK_SIZE = 0;
 	struct args_struct *a = (struct args_struct *)args;
 
 	PAGE_SIZE = sysconf(_SC_PAGESIZE);
-
 	if(sizeof (void*) == sizeof (int))
 		TASK_SIZE = 0xc0000000UL;
 	else // 64-bit system
 		TASK_SIZE = (1UL << 47) - PAGE_SIZE;
 
+	// get the id of thread
 	int id = a->id;
-
+	
+	
+	// run through loop proper amount
+	// but each address poked will be shifted
+	// by the offset based of thread id
 	unsigned long p = 0;
-	// find the starting address
 	unsigned long offset = id*(TASK_SIZE/NUM_THREADS);
 	for (; p < (TASK_SIZE/NUM_THREADS); p += (PAGE_SIZE * 1024)) {
 		int f = syscall(437,p+offset);
-		printf("POKING ADDRESS %lu\n",(p+offset));
+		// printf("POKING ADDRESS %lu\n",(p+offset));
 		(a->flags).push_back(f);
 	}
 
