@@ -5,6 +5,7 @@ Some of the APIs used to allocate memory in Linux are:
 
 |  API       | Description                                                                               |
 |:----------:|-------------------------------------------------------------------------------------------|
+| `kmalloc`  | Useful for allocating an amount of memory that is less than a page size                   |
 | `vmalloc`  | Useful for allocating virtually contiguous memory                                         |
 | `kzmalloc` | This will allocate specified memory size and set it all memory allocated to zero          |
 | `mmap`     | API used to mapped files or devices into memory                                           |
