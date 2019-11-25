@@ -13,8 +13,12 @@ LINK = $(CC) $(FLAGS) -o  # final linked build to binary executable
 COMPILE = $(CC) $(FLAGS) -c  # compilation to inter	mediary .o files
 
 
-main: main.o
+userspace: userspace.o
 	$(LINK) $@ $^ -lpthread -lrt -lstdc++
 
-main.o: main.cc 
+userpace.o: userspace.cc
 	$(COMPILE) $<
+
+clean:
+	rm -f userspace
+	rm -f *.o

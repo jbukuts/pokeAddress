@@ -1,0 +1,84 @@
+diff -urN linux-old/arch/x86/entry/syscalls/syscall_64.tbl linux/arch/x86/entry/syscalls/syscall_64.tbl
+--- linux-old/arch/x86/entry/syscalls/syscall_64.tbl	2019-11-24 18:35:30.418544708 -0500
++++ linux/arch/x86/entry/syscalls/syscall_64.tbl	2019-11-24 18:42:09.395108304 -0500
+@@ -339,6 +339,10 @@
+ 330	common	pkey_alloc		sys_pkey_alloc
+ 331	common	pkey_free		sys_pkey_free
+ 
++333	64	hello			sys_hello
++334	64	poke			sys_poke
++
++
+ #
+ # x32-specific system call numbers start at 512 to avoid cache impact
+ # for native 64-bit operation.
+diff -urN linux-old/hello/hello.c linux/hello/hello.c
+--- linux-old/hello/hello.c	1969-12-31 19:00:00.000000000 -0500
++++ linux/hello/hello.c	2019-11-24 18:38:29.359037352 -0500
+@@ -0,0 +1,7 @@
++#include <linux/kernel.h>
++
++asmlinkage long sys_hello(void)
++{
++        printk("Hello world\n");
++        return 0;
++}
+diff -urN linux-old/hello/Makefile linux/hello/Makefile
+--- linux-old/hello/Makefile	1969-12-31 19:00:00.000000000 -0500
++++ linux/hello/Makefile	2019-11-24 18:38:38.457497199 -0500
+@@ -0,0 +1 @@
++obj-y := hello.o
+diff -urN linux-old/include/linux/syscalls.h linux/include/linux/syscalls.h
+--- linux-old/include/linux/syscalls.h	2019-11-24 18:34:00.733291275 -0500
++++ linux/include/linux/syscalls.h	2019-11-24 18:44:01.639965383 -0500
+@@ -903,4 +903,8 @@
+ asmlinkage long sys_pkey_alloc(unsigned long flags, unsigned long init_val);
+ asmlinkage long sys_pkey_free(int pkey);
+ 
++asmlinkage long sys_hello(void);
++asmlinkage long sys_poke(void*);
++
++
+ #endif
+diff -urN linux-old/Makefile linux/Makefile
+--- linux-old/Makefile	2019-11-24 18:35:14.415883625 -0500
++++ linux/Makefile	2019-11-24 18:38:55.608474333 -0500
+@@ -910,7 +910,7 @@
+ 
+ 
+ ifeq ($(KBUILD_EXTMOD),)
+-core-y		+= kernel/ certs/ mm/ fs/ ipc/ security/ crypto/ block/
++core-y		+= kernel/ certs/ mm/ fs/ ipc/ security/ crypto/ block/ hello/ poke/
+ 
+ vmlinux-dirs	:= $(patsubst %/,%,$(filter %/, $(init-y) $(init-m) \
+ 		     $(core-y) $(core-m) $(drivers-y) $(drivers-m) \
+diff -urN linux-old/poke/Makefile linux/poke/Makefile
+--- linux-old/poke/Makefile	1969-12-31 19:00:00.000000000 -0500
++++ linux/poke/Makefile	2019-11-24 18:41:02.472051100 -0500
+@@ -0,0 +1 @@
++obj-y := poke.o
+diff -urN linux-old/poke/poke.c linux/poke/poke.c
+--- linux-old/poke/poke.c	1969-12-31 19:00:00.000000000 -0500
++++ linux/poke/poke.c	2019-11-24 18:40:48.556882228 -0500
+@@ -0,0 +1,21 @@
++SYSCALL_DEFINE1(poke, void*, p) {
++
++	unsigned long addr = (unsigned long)p;
++
++	struct task_struct *ts = get_current();
++	struct mm_struct *mm=ts->mm;
++	struct vm_area_struct *loc = mm->mmap;
++
++	while (loc->vm_next) {
++		// printk("THIS VMA IS FROM %lu TO %lu",loc->vm_start,loc->vm_end);
++		if ((unsigned long)loc->vm_start <= addr && (unsigned long)loc->vm_end >= addr) {
++			printk("ADDRESS WAS FOUND");
++			return loc->vm_flags;
++		}
++		loc = loc->vm_next;
++	}
++
++
++
++
++}
