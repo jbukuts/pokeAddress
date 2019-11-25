@@ -1,9 +1,9 @@
 
 # pokeAddress
-kernel patch and userspace program that allows for address space to be poked and flags to be returned for each address.
+Kernel patch and userspace program that allows for address space to be poked and flags to be returned for given address.
 
 ## Compilation
-included makefile has multiple options
+Included makefile has multiple options
 - `make` will run the `userspace`  option in the makefile which will simple compile to the program
 - `make clean` will clean the working the directory of compiled and object files
 
