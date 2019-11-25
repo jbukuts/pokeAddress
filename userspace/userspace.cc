@@ -37,7 +37,6 @@ struct args_struct {
 	stack<int> flags;
 };
 
-
 int main(int argc, char* argv[])
 {
 	// get the page size
@@ -66,7 +65,6 @@ int main(int argc, char* argv[])
 		printf("Please specift either [base] or [all]\n");
 
 	return 0; 
-
 }
 
 // wrapper for syscall
@@ -81,7 +79,7 @@ void print_flags(short flags) {
 	string red = (string)KRED;
 	string norm = (string)KNRM;
 	string green = (string)KGRN;
-
+	
 	string read = red+"N"+norm;
 	string write = red+"N"+norm;
 	string exec = red+"N"+norm;
@@ -90,7 +88,6 @@ void print_flags(short flags) {
 		printf("THIS ADDRESS IS INVALID\n");
 		return;
 	}
-
 	uint8_t f = (uint8_t)flags;
 
 	// check and update flags
@@ -114,7 +111,6 @@ void base_poke() {
 	int local_variable = 10;
 	char * buffer;
 	buffer = (char *)malloc (8);
-
 
 	// get the flags
 	int local_flags = poke_addr((void *)&local_variable);
@@ -157,15 +153,8 @@ void entire_poke() {
 			print_flags(f);
 		}
 	}
-	
-	
-	
 	// print the final results
 	printf("\nVALID ADDRESSES:\t%'lu\nINVALID ADDRESSES:\t%'lu\n",validAddr,invalidAddr);
-
-
-	
-
 }
 
 void *Thread(void *args) {
@@ -189,10 +178,5 @@ void *Thread(void *args) {
 	}
 
 	printf("THREAD %d COMPLETED!\n",id);
-
 	pthread_exit(NULL);
 }
-
-
-
-
